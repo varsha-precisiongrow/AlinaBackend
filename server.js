@@ -6,6 +6,9 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 
+// 👇 ADD HERE
+console.log("TWILIO SID CHECK:", process.env.TWILIO_ACCOUNT_SID);
+
 const app = express();
 
 /* ================================
@@ -247,7 +250,8 @@ app.post("/booking", async (req, res) => {
     await newBooking.save();
 
     console.log("✅ Booking saved in DB");
-
+// 👇 ADD HERE
+console.log("TWILIO SID CHECK:", process.env.TWILIO_ACCOUNT_SID);
     // ✅ Patient WhatsApp message
     const patientMsg = await client.messages.create({
       from: "whatsapp:+14155238886",
