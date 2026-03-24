@@ -163,19 +163,85 @@ app.post("/create-order", async (req, res) => {
    Save Booking
 ================================ */
 
-const twilio = require("twilio");
+// const twilio = require("twilio");
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// const client = twilio(
+//   process.env.TWILIO_ACCOUNT_SID,
+//   process.env.TWILIO_AUTH_TOKEN
+// );
 
 /* ================================
    Save Booking
 ================================ */
+// app.post("/booking", async (req, res) => {
+//   try {
+//     console.log("🔥 Booking API hit hua");
+
+//     const newBooking = new Booking(req.body);
+//     await newBooking.save();
+
+//     console.log("✅ Booking saved in DB");
+
+//     // ✅ Patient WhatsApp message
+//     console.log("📤 Sending message to patient...");
+
+//     const patientMsg = await client.messages.create({
+//       from: "whatsapp:+14155238886",
+//       to: `whatsapp:+91${req.body.phone}`,
+//       body: `✅ Booking Confirmed!
+
+// Patient: ${req.body.patientName}
+// Test: ${req.body.testName}
+// Date: ${req.body.appointmentDate}
+
+// 📍 Technician will visit soon.
+// - Alina Diagnostics`,
+//     });
+
+//     console.log("✅ Patient message SID:", patientMsg.sid);
+
+//     // ✅ Technician WhatsApp message
+//     console.log("📤 Sending message to technician...");
+
+//     const techMsg = await client.messages.create({
+//       from: "whatsapp:+14155238886",
+//       to: "whatsapp:+919930888088",
+//       body: `🚨 New Booking Alert!
+
+// Patient: ${req.body.patientName}
+// Phone: ${req.body.phone}
+// Address: ${req.body.street}, ${req.body.city}
+// Test: ${req.body.testName}
+// Date: ${req.body.appointmentDate}
+
+// 👉 Please visit patient.`,
+//     });
+
+//     console.log("✅ Technician message SID:", techMsg.sid);
+
+//     res.json({
+//       success: true,
+//       message: "Booking saved & WhatsApp sent ✅",
+//     });
+
+//   } catch (error) {
+//     console.log("❌ ERROR:", error);
+//     res.status(500).json({ message: "Error saving booking" });
+//   }
+// });
 app.post("/booking", async (req, res) => {
   try {
     console.log("🔥 Booking API hit hua");
+
+    // ✅ Move Twilio here
+    const twilio = require("twilio");
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    // 🔍 Debug (important)
+    console.log("SID:", process.env.TWILIO_ACCOUNT_SID);
 
     const newBooking = new Booking(req.body);
     await newBooking.save();
@@ -183,38 +249,34 @@ app.post("/booking", async (req, res) => {
     console.log("✅ Booking saved in DB");
 
     // ✅ Patient WhatsApp message
-    console.log("📤 Sending message to patient...");
-
     const patientMsg = await client.messages.create({
       from: "whatsapp:+14155238886",
       to: `whatsapp:+91${req.body.phone}`,
       body: `✅ Booking Confirmed!
 
-Patient: ${req.body.patientName}
-Test: ${req.body.testName}
-Date: ${req.body.appointmentDate}
+      Patient: ${req.body.patientName}
+      Test: ${req.body.testName}
+      Date: ${req.body.appointmentDate}
 
-📍 Technician will visit soon.
-- Alina Diagnostics`,
-    });
+      📍 Technician will visit soon.
+      - Alina Diagnostics`,
+          });
 
     console.log("✅ Patient message SID:", patientMsg.sid);
 
     // ✅ Technician WhatsApp message
-    console.log("📤 Sending message to technician...");
-
     const techMsg = await client.messages.create({
       from: "whatsapp:+14155238886",
       to: "whatsapp:+919930888088",
       body: `🚨 New Booking Alert!
 
-Patient: ${req.body.patientName}
-Phone: ${req.body.phone}
-Address: ${req.body.street}, ${req.body.city}
-Test: ${req.body.testName}
-Date: ${req.body.appointmentDate}
+      Patient: ${req.body.patientName}
+      Phone: ${req.body.phone}
+      Address: ${req.body.street}, ${req.body.city}
+      Test: ${req.body.testName}
+      Date: ${req.body.appointmentDate}
 
-👉 Please visit patient.`,
+      👉 Please visit patient.`,
     });
 
     console.log("✅ Technician message SID:", techMsg.sid);
@@ -229,17 +291,6 @@ Date: ${req.body.appointmentDate}
     res.status(500).json({ message: "Error saving booking" });
   }
 });
-// app.post("/booking", async (req, res) => {
-//   try {
-//     const newBooking = new Booking(req.body);
-//     await newBooking.save();
-
-//     res.json({ success: true, message: "Booking saved ✅" });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Error saving booking" });
-//   }
-// });
 
 /* ================================
    Server
