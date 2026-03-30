@@ -231,6 +231,29 @@ Test: ${req.body.testName}`,
 });
 
 /* ================================
+   send invoice
+================================ */
+
+app.post("/send-invoice", async (req, res) => {
+  try {
+    const { phone, bookingId, pdfBase64 } = req.body;
+
+    const mediaUrl = `data:application/pdf;base64,${pdfBase64}`;
+
+    await client.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:+91${phone}`,
+      body: `🧾 Your Invoice (Booking ID: ${bookingId})`,
+      mediaUrl: [mediaUrl], // 🔥 PDF send
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.log("❌ WhatsApp Invoice Error:", error);
+    res.status(500).json({ error: "Failed to send invoice" });
+  }
+});
+/* ================================
    CONTACT API
 ================================ */
 app.post("/contact", async (req, res) => {
