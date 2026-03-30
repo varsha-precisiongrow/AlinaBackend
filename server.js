@@ -86,7 +86,7 @@ const bookingSchema = new mongoose.Schema(
     age: Number,
     gender: String,
     altPhone: String,
-    testName: String,
+    tests: Array, // 🔥 IMPORTANT (store full tests)
     appointmentDate: String,
     paymentMethod: String,
     totalAmount: Number,
@@ -96,7 +96,7 @@ const bookingSchema = new mongoose.Schema(
 );
 const Booking = mongoose.model("Booking", bookingSchema);
 
-// 🔹 ✅ Contact Schema (FIXED)
+// 🔹 Contact Schema
 const contactSchema = new mongoose.Schema(
   {
     name: String,
@@ -116,15 +116,6 @@ const Contact = mongoose.model("Contact", contactSchema);
 
 app.get("/", (req, res) => {
   res.send("Backend server is running 🚀");
-});
-
-app.get("/test", (req, res) => {
-  res.send("Server is working ✅");
-});
-
-// 👉 Browser test
-app.get("/contact", (req, res) => {
-  res.send("Contact API working ✅ (Use POST)");
 });
 
 /* -------- Tests -------- */
@@ -172,7 +163,7 @@ app.post("/create-order", async (req, res) => {
     const options = {
       amount: req.body.amount * 100,
       currency: "INR",
-      receipt: "receipt_order_" + Date.now(),
+      receipt: "receipt_" + Date.now(),
     };
 
     const order = await instance.orders.create(options);
@@ -184,7 +175,7 @@ app.post("/create-order", async (req, res) => {
 });
 
 /* ================================
-   BOOKING API
+   BOOKING API (🔥 FIXED)
 ================================ */
 app.post("/booking", async (req, res) => {
   try {
@@ -195,33 +186,55 @@ app.post("/booking", async (req, res) => {
 
     console.log("✅ Booking saved in DB");
 
-    // 📲 Patient WhatsApp
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: `whatsapp:+91${req.body.phone}`,
-      body: `✅ Booking Confirmed!
+    // 🔥 FIX: Multiple tests support
+    const testNames = req.body.tests
+      ?.map((item) => item.name)
+      .join(", ");
+
+    /* =========================
+       📲 PATIENT MESSAGE
+    ========================= */
+    try {
+      const patientMsg = await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:+91${req.body.phone}`,
+        body: `✅ Booking Confirmed!
 
 Patient: ${req.body.patientName}
-Test: ${req.body.testName}
+Tests: ${testNames}
 Date: ${req.body.appointmentDate}
 
 - Alina Diagnostics`,
-    });
+      });
 
-    // 📲 Admin WhatsApp
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: "whatsapp:+919930888088",
-      body: `🚨 New Booking Alert!
+      console.log("✅ Patient Message SID:", patientMsg.sid);
+    } catch (err) {
+      console.log("❌ Patient WhatsApp Error:", err.message);
+    }
+
+    /* =========================
+       📲 TECHNICIAN MESSAGE
+    ========================= */
+    try {
+      const adminMsg = await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: "whatsapp:+919930888088",
+        body: `🚨 New Booking Alert!
 
 Patient: ${req.body.patientName}
 Phone: ${req.body.phone}
-Test: ${req.body.testName}`,
-    });
+Tests: ${testNames}
+Date: ${req.body.appointmentDate}`,
+      });
+
+      console.log("✅ Technician Message SID:", adminMsg.sid);
+    } catch (err) {
+      console.log("❌ Technician WhatsApp Error:", err.message);
+    }
 
     res.json({
       success: true,
-      message: "Booking saved & WhatsApp sent ✅",
+      message: "Booking saved & messages processed ✅",
     });
 
   } catch (error) {
@@ -229,7 +242,6 @@ Test: ${req.body.testName}`,
     res.status(500).json({ message: "Error saving booking" });
   }
 });
-
 
 /* ================================
    CONTACT API
@@ -249,34 +261,32 @@ app.post("/contact", async (req, res) => {
     });
 
     await newContact.save();
-    console.log("✅ Contact saved in DB");
 
-    // 📲 Admin WhatsApp
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: "whatsapp:+919930888088",
-      body: `📩 New Contact Form!
+    // Admin
+    try {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: "whatsapp:+919930888088",
+        body: `📩 New Contact!
 
 Name: ${name}
 Phone: ${phone}
-Email: ${email}
-Subject: ${subject}
+Subject: ${subject}`,
+      });
+    } catch (err) {
+      console.log("❌ Admin WhatsApp Error:", err.message);
+    }
 
-Message:
-${message}`,
-    });
-
-    // 📲 User WhatsApp
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: `whatsapp:+91${phone}`,
-      body: `🙏 Thank you for contacting Alina Diagnostics!
-
-We received your query:
-"${subject}"
-
-We will contact you soon.`,
-    });
+    // User
+    try {
+      await client.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:+91${phone}`,
+        body: `🙏 Thank you for contacting us!`,
+      });
+    } catch (err) {
+      console.log("❌ User WhatsApp Error:", err.message);
+    }
 
     res.json({
       success: true,
@@ -290,7 +300,7 @@ We will contact you soon.`,
 });
 
 /* ================================
-   Server
+   SERVER
 ================================ */
 const PORT = process.env.PORT || 5000;
 
