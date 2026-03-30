@@ -294,9 +294,11 @@ Subject: ${subject}`,
     });
 
   } catch (error) {
-    console.log("❌ Contact Error:", error);
-    res.status(500).json({ message: "Error saving contact" });
-  }
+  console.log("❌ FULL ERROR:", error.message);
+  console.log("❌ MORE:", error);
+
+  res.status(500).json({ message: error.message });
+}
 });
 
 /* ================================
