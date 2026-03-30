@@ -431,7 +431,26 @@ app.get("/tests", async (req, res) => {
     res.status(500).json({ message: "Error fetching tests" });
   }
 });
+/* -------- Single Test Details (FIXED) -------- */
+app.get("/tests/:slug", async (req, res) => {
+  try {
+    console.log("🔍 Fetching test:", req.params.slug);
 
+    const test = await Test.findOne({ slug: req.params.slug });
+
+    if (!test) {
+      console.log("❌ Test not found");
+      return res.status(404).json({ message: "Test not found" });
+    }
+
+    console.log("✅ Test found");
+    res.json(test);
+
+  } catch (error) {
+    console.log("❌ Error fetching test:", error.message);
+    res.status(500).json({ message: "Error fetching test" });
+  }
+});
 /* -------- Corporate Wellness -------- */
 app.get("/corporate-wellness", async (req, res) => {
   try {
