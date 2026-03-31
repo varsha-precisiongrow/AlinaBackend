@@ -507,48 +507,25 @@ app.post("/booking", async (req, res) => {
     /* =========================
        📲 PATIENT MESSAGE
     ========================= */
-// try {
-//   const patientMsg = await client.messages.create({
-//     from: "whatsapp:+14155238886",
-//     to: `whatsapp:+91${req.body.phone}`,
-//     body: `✅ *Booking Confirmed!*
+    try {
+      const patientMsg = await client.messages.create({
+        body: `✅ Booking Confirmed!
 
-// 👤 Patient: ${req.body.patientName}
-// 📅 Date: ${req.body.appointmentDate}
+    Patient: ${req.body.patientName}
+    Date: ${req.body.appointmentDate}
+    Amount: ₹${req.body.totalAmount}
 
-// 🧪 Tests:
-// ${testList}
+    Alina Diagnostics`,
 
-// 💰 Amount: ₹${req.body.totalAmount}
-// 👨‍⚕️ Doctor: ${req.body.doctorName || "N/A"}
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: `+91${req.body.phone}`,
+      });
 
-// 🏥 Alina Diagnostics`,
-//   });
+      console.log("✅ Patient SMS Sent:", patientMsg.sid);
 
-//   console.log("✅ Patient Message SID:", patientMsg.sid);
-
-// } catch (err) {
-//   console.log("❌ Patient WhatsApp ERROR:", err);
-// }
-try {
-  const patientMsg = await client.messages.create({
-    body: `Booking Confirmed!
-
-Patient: ${req.body.patientName}
-Date: ${req.body.appointmentDate}
-Amount: ₹${req.body.totalAmount}
-
-Alina Diagnostics`,
-    
-    from: process.env.TWILIO_PHONE_NUMBER, // normal Twilio number
-    to: `+91${req.body.phone}`, // no whatsapp:
-  });
-
-  console.log("✅ SMS Sent:", patientMsg.sid);
-
-} catch (err) {
-  console.log("❌ SMS Error:", err);
-}
+    } catch (err) {
+      console.log("❌ Patient SMS Error:", err);
+    }
 
     /* =========================
        👨‍🔬 TECHNICIAN MESSAGE
