@@ -327,6 +327,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "text/html; charset=UTF-8");
+  next();
+});
+
 /* ================================
    MongoDB Connection
 ================================ */
@@ -450,45 +455,45 @@ app.get("/tests/:slug", async (req, res) => {
     console.log("❌ Error fetching test:", error.message);
     res.status(500).json({ message: "Error fetching test" });
   }
-});
-/* -------- Corporate Wellness -------- */
-app.get("/corporate-wellness", async (req, res) => {
-  try {
-    const packages = await CorporateWellnessPackage.find();
-    res.json(packages);
-  } catch {
-    res.status(500).json({ message: "Error fetching packages" });
-  }
-});
+  });
+  /* -------- Corporate Wellness -------- */
+  app.get("/corporate-wellness", async (req, res) => {
+    try {
+      const packages = await CorporateWellnessPackage.find();
+      res.json(packages);
+    } catch {
+      res.status(500).json({ message: "Error fetching packages" });
+    }
+  });
 
-/* ================================
-   Razorpay
-================================ */
-app.post("/create-order", async (req, res) => {
-  try {
-    const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    /* ================================
+      Razorpay
+    ================================ */
+    app.post("/create-order", async (req, res) => {
+      try {
+        const instance = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID,
+          key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+
+        const order = await instance.orders.create({
+          amount: req.body.amount * 100,
+          currency: "INR",
+          receipt: "receipt_" + Date.now(),
+        });
+
+        res.json(order);
+      } catch (error) {
+        console.error("Razorpay Error:", error);
+        res.status(500).send("Error creating order");
+      }
     });
 
-    const order = await instance.orders.create({
-      amount: req.body.amount * 100,
-      currency: "INR",
-      receipt: "receipt_" + Date.now(),
-    });
-
-    res.json(order);
-  } catch (error) {
-    console.error("Razorpay Error:", error);
-    res.status(500).send("Error creating order");
-  }
-});
-
-/* ================================
-   BOOKING API (FINAL)
-================================ */
-app.post("/booking", async (req, res) => {
-  try {
+    /* ================================
+      BOOKING API (FINAL)
+    ================================ */
+    app.post("/booking", async (req, res) => {
+      try {
     console.log("🔥 Booking API hit");
 
     console.log("PHONE:", req.body.phone);
@@ -507,26 +512,36 @@ app.post("/booking", async (req, res) => {
     /* =========================
        📲 PATIENT MESSAGE
     ========================= */
-    try {
-      const patientMsg = await client.messages.create({
-        body: `✅ Booking Confirmed!
+    // try {
+    //   const patientMsg = await client.messages.create({
+    //     body: `✅ Booking Confirmed!
 
-    Patient: ${req.body.patientName}
-    Date: ${req.body.appointmentDate}
-    Amount: ₹${req.body.totalAmount}
+    // Patient: ${req.body.patientName}
+    // Date: ${req.body.appointmentDate}
+    // Amount: ₹${req.body.totalAmount}
 
-    Alina Diagnostics`,
+    // Alina Diagnostics`,
 
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: `+91${req.body.phone}`,
-      });
+    //     from: process.env.TWILIO_PHONE_NUMBER,
+    //     to: `+91${req.body.phone}`,
+    //   });
 
-      console.log("✅ Patient SMS Sent:", patientMsg.sid);
+    //   console.log("✅ Patient SMS Sent:", patientMsg.sid);
 
-    } catch (err) {
-      console.log("❌ Patient SMS Error:", err);
-    }
+    // } catch (err) {
+    //   console.log("❌ Patient SMS Error:", err);
+    // }
+const patientMsg = await client.messages.create({
+  body: `✅ Booking Confirmed!
 
+Patient: ${req.body.patientName}
+Date: ${req.body.appointmentDate}
+Amount: ₹${req.body.totalAmount}
+
+Alina Diagnostics`,
+  from: "whatsapp:+14155238886",
+  to: `whatsapp:+91${req.body.phone}`,  // ✅ FIXED
+});
     /* =========================
        👨‍🔬 TECHNICIAN MESSAGE
     ========================= */
@@ -536,14 +551,14 @@ app.post("/booking", async (req, res) => {
         to: "whatsapp:+919930888088",
         body: `🚨 *New Booking Alert*
 
-👤 Patient: ${req.body.patientName}
-📞 Phone: ${req.body.phone}
+      👤 Patient: ${req.body.patientName}
+      📞 Phone: ${req.body.phone}
 
-🧪 Tests:
-${testList}
+      🧪 Tests:
+      ${testList}
 
-📅 Date: ${req.body.appointmentDate}
-💰 Amount: ₹${req.body.totalAmount}`,
+      📅 Date: ${req.body.appointmentDate}
+      💰 Amount: ₹${req.body.totalAmount}`,
       });
 
       console.log("✅ Technician Message SID:", techMsg.sid);
@@ -576,9 +591,9 @@ app.post("/contact", async (req, res) => {
       to: "whatsapp:+919930888088",
       body: `📩 New Contact!
 
-Name: ${name}
-Phone: ${phone}
-Subject: ${subject}`,
+      Name: ${name}
+      Phone: ${phone}
+      Subject: ${subject}`,
     });
 
     await client.messages.create({
@@ -603,3 +618,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+
