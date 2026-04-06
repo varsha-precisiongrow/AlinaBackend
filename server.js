@@ -488,6 +488,78 @@ app.post("/create-order", async (req, res) => {
 /* ================================
    BOOKING API (SAVE + SMS)
 ================================ */
+// app.post("/booking", async (req, res) => {
+//   try {
+//     console.log("📦 Incoming Data:", req.body);
+
+//     // ✅ SAVE TO MONGODB
+//     const newBooking = new Booking(req.body);
+//     await newBooking.save();
+//     console.log("✅ Booking saved in MongoDB");
+
+//     // ✅ SAFE PHONE
+//     const phone = req.body.phone.startsWith("+91")
+//       ? req.body.phone
+//       : `+91${req.body.phone}`;
+
+//     // ✅ ITEMS LIST
+//     const testData = req.body.items || [];
+//     const testList =
+//       testData.length > 0
+//         ? testData.map((t, i) => `${i + 1}. ${t.name}`).join("\n")
+//         : "No tests";
+
+//     /* 📲 PATIENT SMS */
+//     try {
+//       const msg = await client.messages.create({
+//         body: `✅ Booking Confirmed!
+
+// Patient: ${req.body.patientName}
+// Date: ${req.body.appointmentDate}
+// Amount: ₹${req.body.totalAmount}
+
+// Alina Diagnostics`,
+//         from: process.env.TWILIO_SMS_NUMBER,
+//         to: phone,
+//       });
+
+//       console.log("✅ Patient SMS:", msg.sid);
+//     } catch (err) {
+//       console.log("❌ Patient SMS Error:", err.message);
+//     }
+
+//     /* 👨‍🔬 TECHNICIAN SMS */
+//     try {
+//       const msg = await client.messages.create({
+//         body: `🚨 New Booking Alert!
+
+// Patient: ${req.body.patientName}
+// Phone: ${phone}
+
+// Tests:
+// ${testList}
+
+// Date: ${req.body.appointmentDate}
+// Amount: ₹${req.body.totalAmount}`,
+//         from: process.env.TWILIO_SMS_NUMBER,
+//         to: "+919930888088",
+//       });
+
+//       console.log("✅ Technician SMS:", msg.sid);
+//     } catch (err) {
+//       console.log("❌ Technician SMS Error:", err.message);
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Booking saved & SMS sent ✅",
+//     });
+
+//   } catch (error) {
+//     console.log("❌ FULL ERROR:", error.message);
+//     res.status(500).json({ message: "Error saving booking" });
+//   }
+// });
 app.post("/booking", async (req, res) => {
   try {
     console.log("📦 Incoming Data:", req.body);
@@ -497,19 +569,20 @@ app.post("/booking", async (req, res) => {
     await newBooking.save();
     console.log("✅ Booking saved in MongoDB");
 
-    // ✅ SAFE PHONE
+    // ✅ FIX PHONE FORMAT
     const phone = req.body.phone.startsWith("+91")
       ? req.body.phone
       : `+91${req.body.phone}`;
 
-    // ✅ ITEMS LIST
+    // ✅ TEST LIST
     const testData = req.body.items || [];
-    const testList =
-      testData.length > 0
-        ? testData.map((t, i) => `${i + 1}. ${t.name}`).join("\n")
-        : "No tests";
+    const testList = testData.length > 0
+      ? testData.map((t, i) => `${i + 1}. ${t.name}`).join("\n")
+      : "No tests";
 
-    /* 📲 PATIENT SMS */
+    // =====================
+    // 📲 PATIENT SMS
+    // =====================
     try {
       const msg = await client.messages.create({
         body: `✅ Booking Confirmed!
@@ -528,13 +601,15 @@ Alina Diagnostics`,
       console.log("❌ Patient SMS Error:", err.message);
     }
 
-    /* 👨‍🔬 TECHNICIAN SMS */
+    // =====================
+    // 👨‍🔬 TECHNICIAN SMS
+    // =====================
     try {
       const msg = await client.messages.create({
         body: `🚨 New Booking Alert!
 
 Patient: ${req.body.patientName}
-Phone: ${phone}
+Phone: ${req.body.phone}
 
 Tests:
 ${testList}
@@ -550,17 +625,13 @@ Amount: ₹${req.body.totalAmount}`,
       console.log("❌ Technician SMS Error:", err.message);
     }
 
-    res.json({
-      success: true,
-      message: "Booking saved & SMS sent ✅",
-    });
+    res.json({ success: true });
 
   } catch (error) {
     console.log("❌ FULL ERROR:", error.message);
     res.status(500).json({ message: "Error saving booking" });
   }
 });
-
 /* ================================
    CONTACT API (SMS)
 ================================ */
@@ -798,8 +869,8 @@ app.listen(PORT, () => {
 //     console.log("PHONE:", req.body.phone);
 //     console.log("FINAL TO:", `whatsapp:+91${req.body.phone}`);
 
-//     const newBooking = new Booking(req.body);
-//     await newBooking.save();
+    // const newBooking = new Booking(req.body);
+    // await newBooking.save();
 
 //     console.log("✅ Booking saved in DB");
 
